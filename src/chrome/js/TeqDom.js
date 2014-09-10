@@ -109,25 +109,27 @@
 					return t.dom(childs[Number(index) || 0]);
 				}				
 			},
-			each : function (func) {
+			each: function (func) {
 				this.nodes.forEach(func.bind(this));
 				return this;
 			},
 			_actionsClasses  : function (names,action) {
 				var classNames = (!t.isArray(names)) ? [names] : names;
 				return this.each(function (node) {					
-					for (var key in classNames) {
-						switch (action) {
-							case 'add' :							
-								node.classList.add(classNames[key]);								
-							break;
-							case 'remove' :
-								node.classList.remove(classNames[key]);								
-							break;
-							case 'toggle' : 
-								node.classList.toggle(classNames[key]);								
-							break;
-						}						
+				    for (var key in classNames) {
+				        if (t.dom.isElement(node)) {
+				            switch (action) {
+				                case 'add':
+				                    node.classList.add(classNames[key]);
+				                    break;
+				                case 'remove':
+				                    node.classList.remove(classNames[key]);
+				                    break;
+				                case 'toggle':
+				                    node.classList.toggle(classNames[key]);
+				                    break;
+				            }
+				        }
 					}
 				})
 			},
@@ -143,43 +145,72 @@
 			hasClass : function (className) {
 				var result = false;
 				this.each(function (node) {
-					result =  node.classList.contains(className);
-					if(result === true){
-						return;
-					}
+				    if (t.dom.isElement(node)) {
+				        result = node.classList.contains(className);
+				        if (result === true) {
+				            return;
+				        }
+				    }					
 				});
 				return result;
 			},
 			attr : t.accessor({
-				get : function (key) {
-					return this.first.getAttribute(key);
+			    get: function (key) {
+			        if (t.dom.isElement(this.first)) {
+			            return this.first.getAttribute(key);
+			        }
 				},
 				set : function (key,val) {							
 					var e = this.nodes, i = e.length;
 					while (i--) {
-						e[i].setAttribute(key, val);
+					    if (t.dom.isElement(e[i])) {
+					        e[i].setAttribute(key, val);
+					    }
 					}
 				}
 			}),
-			get html () {
-				return this.first.innerHTML;
+			removeAttr: function (key) {
+			    this.each(function (node) {
+			        if (t.dom.isElement(node)) {
+			            node.removeAttribute(key);
+			        }
+			    });
+
+			    return this;
 			},
-			set html (value) {
-				this.first.innerHTML = value;
+			get html() {
+			    if (t.dom.isElement(this.first)) {
+			        return this.first.innerHTML;
+			    }
+			    return;
+				
+			},
+			set html(value) {
+			    if (t.dom.isElement(this.first)) {
+			        this.first.innerHTML = value;
+			    }
 				return this;
 			},
-			get text () {
-				var property = document.body.innerText == null ? 'textContent' : 'innerText';
-				return this.first[property];
+			get text() {
+			    var property = document.body.innerText == null ? 'textContent' : 'innerText';
+			    if (t.dom.isElement(this.first)) {
+			        return this.first[property];
+			    }
+			    return;
 			},
 			set text (text) {
-				var property = document.body.innerText == null ? 'textContent' : 'innerText';
-				this.first[property] = text;
+			    var property = document.body.innerText == null ? 'textContent' : 'innerText';
+			    if (t.dom.isElement(this.first)) {
+			        this.first[property] = text;
+			    }
 				return this;
 			},
 			css : t.accessor({
-				get : function (key) {
-					return window.getComputedStyle(this.first, "").getPropertyValue(hyphenate(key));
+			    get: function (key) {
+			        if (t.dom.isElement(this.first)) {
+			            return window.getComputedStyle(this.first, "").getPropertyValue(hyphenate(key));
+			        }
+			        return;
 				},
 				set : function (key,val) {							
 					var e = this.nodes, i = e.length;
@@ -187,11 +218,17 @@
 						if (typeof val == 'number' && !ignoreCssPostfix[key]) {
 							val += 'px';
 						}
-						e[i].style[camelCase(key)] = val;
+						if (t.dom.isElement(e[i])) {
+						    e[i].style[camelCase(key)] = val;
+						}
 					}
+					return this;
 				}
 			}),
-			get offset () {
+			get offset() {
+			    if (!t.dom.isElement(this.first)) {
+			        return;
+			    }
 				var node = this.first;
 				if (node.offsetX != null) {
 					return { x: node.offsetX, y: node.offsetY };
@@ -214,32 +251,51 @@
 					return null;
 				}
 			},
-			get size () {
+			get size() {
+			    if (!t.dom.isElement(this.first)) {
+			        return;
+			    }
 				var node = (this.first == document) ? document.body : this.first;
 				var box = node.getBoundingClientRect();
 				return {width : box.width, height : box.height}
 			},
 			bind : function (event,callback) {
-				this.each(function (node) {
-					node.addEventListener(event, callback, false);
+			    this.each(function (node) {
+			        if (t.dom.isElement(node)) {
+			            var arrayEvents = event.split(" ");
+			            arrayEvents.forEach(function (currentEvent) {
+			                node.addEventListener(currentEvent, callback, false);
+			            });
+			        }
 				});
 				return this;
 			},
 			unbind : function (event,callback) {
-				this.each(function (node) {
-					node.removeEventListener(event, callback, false);
+			    this.each(function (node) {
+			        if (t.dom.isElement(node)) {
+			            var arrayEvents = event.split(" ");
+			            arrayEvents.forEach(function (currentEvent) {			                
+			                node.removeEventListener(currentEvent, callback, false);
+			            });
+			        }
 				});
 				return this;
 			},			
 			empty : function () {
-				return this.each(function (node) {
-					while (node.hasChildNodes()) {
-						node.removeChild( node.firstChild );
-					}
-				});
+			    return this.each(function (node) {
+			        if (t.dom.isElement(node)) {
+			            while (node.hasChildNodes()) {
+			                node.removeChild(node.firstChild);
+			            }
+			        }					
+			    });
+			    return this;
 			},
-			parent : function(step) {
-				return findParentByStep(this.first, step);
+			parent: function (step) {
+			    if (t.dom.isElement(this.first)) {
+			        return findParentByStep(this.first, step);
+			    }
+			    return;
 			},
 			insertBefore: function (node) {
 				var fr = document.createDocumentFragment();
@@ -264,17 +320,20 @@
 				}
 				return this;
 			},
-			append : function (node,index) {						
-				if (index == null || !(this.children(index) instanceof TeqDom) || this.children(index).length == 0) {
-					var fr = document.createDocumentFragment();
-					node.each(function (node) {
-						fr.appendChild(node);
-					});
-					this.first.appendChild(fr);
-				}
-				else{					
-					t.dom(node).insertBefore(this.children(index));
-				}
+			append: function (node, index) {
+			    if (t.dom.isElement(this.first)) {
+			        if (index == null || !(this.children(index) instanceof TeqDom) || this.children(index).length == 0) {
+			            var fr = document.createDocumentFragment();
+			            el = (node instanceof TeqDom) ? node : new TeqDom(node);
+			            el.each(function (node) {
+			                fr.appendChild(node);
+			            });
+			            this.first.appendChild(fr);
+			        }
+			        else {
+			            t.dom(node).insertBefore(this.children(index));
+			        }
+			    }
 				return this;
 			},
 			clone : function (deep) {
@@ -282,16 +341,20 @@
 					deep = true;
 				}
 				var clones = [];
-				this.each (function (node) {
-					clones.push(node.cloneNode(deep));
+				this.each(function (node) {
+				    if (t.dom.isElement(node)) {
+				        clones.push(node.cloneNode(deep));
+				    }
 				});
 				return t.dom(clones);
 			},
 			remove : function () {
-				return this.each(function (node) {
-					if (node.parentNode) {
-						node.parentNode.removeChild(node);
-					}
+			    return this.each(function (node) {
+			        if (t.dom.isElement(node)) {
+			            if (node.parentNode) {
+			                node.parentNode.removeChild(node);
+			            }
+			        }
 				});
 			},
 			find : function (selector) {
@@ -309,6 +372,18 @@
 					return this.length > 0;
 				}
 				return t.dom.is(this.first, selector);
+			},
+			maxAllowableWidth: function () {
+			    var parent, children, width;
+			    parent = this.parent();			    
+			    children = parent.children();
+			    width = parent.size.width;			    
+			    children.each(function (el) {			        
+			        if (t.dom(el).css("display") != "none") {			            
+			            width = width - t.dom(el).size.width;
+			        }
+			    });
+			    return Math.floor(width);
 			}
 		};
 		

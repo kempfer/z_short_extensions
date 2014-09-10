@@ -1,7 +1,7 @@
 {
     "name":"ZShort",
     "version":"1.0.1",
-    "description":"Demo plugin",
+    "description":"Service shortlinks",
 	"manifest_version": 2,
 	"browser_action": {
 		"default_title": "Service shortlinks",
@@ -16,6 +16,8 @@
 		"128" : "img/icon128.png"
 	},
 	"permissions": [
-		"tabs"
+		"tabs",
+		"http://*/"
 	]
+	
 }
