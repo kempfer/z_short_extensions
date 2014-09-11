@@ -11,7 +11,7 @@ t.Class.define('zs.api',{
 			t.ajax({
 				method : method,
 				data : data,
-				url : 'http://zshort.zotmax.magnusega.com/' + url,
+				url : config.apiUrl + url,
 				onReady : function (response) {
 					resolve(response);
 				},

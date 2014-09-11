@@ -30,3 +30,6 @@
 	display: none;
 	margin-top: 15px;
 }
+#response::selection {
+ background: #B7F3C5; /* Safari */
+}
