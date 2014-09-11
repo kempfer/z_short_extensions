@@ -1,6 +1,7 @@
 {
     "name":"ZShort",
     "version":"1.0.1",
+	"short_name" : "ZS",
     "description":"Service shortlinks",
 	"manifest_version": 2,
 	"browser_action": {
